@@ -12,15 +12,52 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4.1.7
 
+      - name: Check for requirements and galaxy files
+        id: check-files
+        shell: bash
+        run: |
+          if [ -f "requirements.yml" ]; then
+            echo "requirements_exist=true" >> $GITHUB_OUTPUT
+            echo "Requirements file content:"
+            cat requirements.yml
+          else
+            echo "requirements_exist=false" >> $GITHUB_OUTPUT
+            echo "requirements.yml not found"
+          fi
+          if [ -f "galaxy.yml" ]; then
+            echo "galaxy_exist=true" >> $GITHUB_OUTPUT
+            echo "Galaxy file content:"
+            cat galaxy.yml
+          else
+            echo "galaxy_exist=false" >> $GITHUB_OUTPUT
+            echo "galaxy.yml not found"
+          fi
+
       - name: Cache Ansible and dependencies
         uses: actions/cache@v4.0.2
         id: cache-step
         with:
           path: |
             ~/.local/pipx/venvs/ansible
-            ~/.ansible
-            ~/.cache/ansible-galaxy
-          key: ${{ runner.os }}-ansible-${{ hashFiles('**/requirements.yml', '**/galaxy.yml') }}
+            /usr/local/lib/python3.8/dist-packages
+            ~/.ansible/
+            ~/.cache/
+          key: ${{ runner.os }}-ansible-${{ hashFiles('**/requirements.yml', '**/galaxy.yml') }}-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-ansible-
+
+      - name: Verify cache paths
+        shell: bash
+        run: |
+          echo "Verifying cache paths:"
+          echo "~/.local/pipx/venvs/ansible:"
+          ls -R ~/.local/pipx/venvs/ansible || echo "Directory not found"
+          echo "/usr/local/lib/python3.8/dist-packages:"
+          ls -R /usr/local/lib/python3.8/dist-packages || echo "Directory not found"
+          echo "~/.ansible/:"
+          ls -R ~/.ansible/ || echo "Directory not found"
+          echo "~/.cache/:"
+          ls -R ~/.cache/ || echo "Directory not found"
 
       - name: Install Ansible (if not cached)
         if: steps.cache-step.outputs.cache-hit != 'true'
@@ -49,4 +86,4 @@ jobs:
 
       # Add your Ansible playbook execution step here
       # - name: Run Ansible playbook
-      #   run: ansible-playbook your-playbook.yml
+      #   run: ansible-playbook -i myinventory.aws_EC2.yml your-playbook.yml
