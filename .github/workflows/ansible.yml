@@ -84,6 +84,7 @@ jobs:
           ansible-inventory -i myinventory.aws_EC2.yml --list
           ansible-inventory -i myinventory.aws_EC2.yml --graph
 
-      # Add your Ansible playbook execution step here
-      # - name: Run Ansible playbook
-      #   run: ansible-playbook -i myinventory.aws_EC2.yml your-playbook.yml
+      - name: Run Ansible playbook
+        shell: pwsh
+        run: |
+          ansible-playbook -i myinventory.aws_EC2.yml playbook.yml
