@@ -6,6 +6,7 @@ on:
 
 env:
   ANSIBLE_HOSTKEY_CHECKING: false
+  ANSIBLE_REMOTE_USER: ubuntu
 
 jobs:
   ansible-deploy:
@@ -90,7 +91,8 @@ jobs:
       - name: Write SSH key to file
         shell: pwsh
         run: |
-          Set-Content -Path mykeyfile -Value '@{{ secrets.ANSIBLE_SSH_KEY }}'
+          Set-Content -Path mykeyfile -Value '${{ secrets.ANSIBLE_SSH_KEY }}'
+          chmod 400 mykeyfile
 
       - name: Run Ansible playbook
         shell: pwsh
