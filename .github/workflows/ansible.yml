@@ -1,0 +1,16 @@
+name: Ansible Deployment
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  ansible-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4.1.7
+
+    - name: AWS Authentication
+      uses: aws-actions/configure-aws-credentials@v4
