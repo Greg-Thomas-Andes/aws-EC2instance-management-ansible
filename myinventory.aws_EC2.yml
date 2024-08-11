@@ -8,3 +8,9 @@ keyed_groups:
     prefix: instance_type
 compose:
   ansible_host: public_ip_address
+filters:
+  instance-state-name: running
+hostnames:
+  - tag:Name
+  - dns-name
+  - private-dns-name

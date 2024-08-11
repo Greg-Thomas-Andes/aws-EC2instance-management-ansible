@@ -7,6 +7,8 @@ on:
 env:
   ANSIBLE_HOSTKEY_CHECKING: false
   ANSIBLE_REMOTE_USER: ubuntu
+  ANSIBLE_DEBUG: True
+  BOTO_DEBUG: 2
 
 jobs:
   ansible-deploy:
@@ -24,7 +26,7 @@ jobs:
       - name: Install Ansible and dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install ansible boto3
+          pip install ansible boto3 botocore
 
       - name: Install Ansible Galaxy Collection
         run: |
@@ -34,6 +36,10 @@ jobs:
       - name: Verify amazon.aws collection
         run: |
           ansible-doc -t inventory amazon.aws.aws_ec2
+
+      - name: Check Ansible Configuration
+        run: |
+          ansible-config dump --only-changed
 
       - name: AWS Authentication
         uses: aws-actions/configure-aws-credentials@v4
@@ -50,10 +56,15 @@ jobs:
         run: |
           aws ec2 describe-instances --query 'Reservations[*].Instances[*].[InstanceId,State.Name,Tags[?Key==`Name`].Value|[0]]' --output table
 
+      - name: Debug - Print inventory file content
+        run: |
+          echo "Content of myinventory.aws_EC2.yml:"
+          cat myinventory.aws_EC2.yml
+
       - name: Run Ansible inventory commands
         run: |
-          ansible-inventory -i myinventory.aws_EC2.yml --list --yaml
-          ansible-inventory -i myinventory.aws_EC2.yml --graph
+          ANSIBLE_VERBOSITY=3 ansible-inventory -i myinventory.aws_EC2.yml --list --yaml
+          ANSIBLE_VERBOSITY=3 ansible-inventory -i myinventory.aws_EC2.yml --graph
 
       - name: Write SSH key to file
         run: |
@@ -62,4 +73,4 @@ jobs:
 
       - name: Run Ansible playbook with verbose output
         run: |
-          ansible-playbook -i myinventory.aws_EC2.yml --private-key mykeyfile playbook.yml -vvv
+          ANSIBLE_VERBOSITY=3 ansible-playbook -i myinventory.aws_EC2.yml --private-key mykeyfile playbook.yml -vvv
