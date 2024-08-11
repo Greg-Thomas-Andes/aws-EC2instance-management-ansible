@@ -1,16 +1,17 @@
-plugin: amazon.aws.aws_ec2
-regions:
-  - ap-southeast-1
-keyed_groups:
-  - prefix: tag
-    key: tags
-  - key: instance_type
-    prefix: instance_type
-compose:
-  ansible_host: public_ip_address
-filters:
-  instance-state-name: running
-hostnames:
-  - tag:Name
-  - dns-name
-  - private-dns-name
+all:
+  plugin: amazon.aws.aws_ec2
+  regions:
+    - ap-southeast-1
+  keyed_groups:
+    - prefix: tag
+      key: tags
+    - key: instance_type
+      prefix: instance_type
+  compose:
+    ansible_host: public_ip_address
+  filters:
+    instance-state-name: running
+  hostnames:
+    - tag:Name
+    - dns-name
+    - private-dns-name
