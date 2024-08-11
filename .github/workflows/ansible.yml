@@ -16,27 +16,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4.1.7
 
-      - name: Check for requirements and galaxy files
-        id: check-files
-        shell: bash
-        run: |
-          if [ -f "requirements.yml" ]; then
-            echo "requirements_exist=true" >> $GITHUB_OUTPUT
-            echo "Requirements file content:"
-            cat requirements.yml
-          else
-            echo "requirements_exist=false" >> $GITHUB_OUTPUT
-            echo "requirements.yml not found"
-          fi
-          if [ -f "galaxy.yml" ]; then
-            echo "galaxy_exist=true" >> $GITHUB_OUTPUT
-            echo "Galaxy file content:"
-            cat galaxy.yml
-          else
-            echo "galaxy_exist=false" >> $GITHUB_OUTPUT
-            echo "galaxy.yml not found"
-          fi
-
       - name: Cache Ansible and dependencies
         uses: actions/cache@v4.0.2
         id: cache-step
@@ -50,19 +29,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-ansible-
 
-      - name: Verify cache paths
-        shell: bash
-        run: |
-          echo "Verifying cache paths:"
-          echo "~/.local/pipx/venvs/ansible:"
-          ls -R ~/.local/pipx/venvs/ansible || echo "Directory not found"
-          echo "/usr/local/lib/python3.8/dist-packages:"
-          ls -R /usr/local/lib/python3.8/dist-packages || echo "Directory not found"
-          echo "~/.ansible/:"
-          ls -R ~/.ansible/ || echo "Directory not found"
-          echo "~/.cache/:"
-          ls -R ~/.cache/ || echo "Directory not found"
-
       - name: Install Ansible (if not cached)
         if: steps.cache-step.outputs.cache-hit != 'true'
         shell: pwsh
@@ -70,7 +36,6 @@ jobs:
           pipx install --include-deps ansible
 
       - name: Install Ansible Galaxy Collection (if not cached)
-        if: steps.cache-step.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
           ansible-galaxy collection install amazon.aws
@@ -82,10 +47,26 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-southeast-1
 
+      - name: Debug - Check AWS credentials
+        shell: pwsh
+        run: |
+          aws sts get-caller-identity
+
+      - name: Debug - List EC2 instances
+        shell: pwsh
+        run: |
+          aws ec2 describe-instances --query 'Reservations[*].Instances[*].[InstanceId,State.Name,Tags[?Key==`Name`].Value|[0]]' --output table
+
+      - name: Debug - Check Ansible version and plugins
+        shell: pwsh
+        run: |
+          ansible --version
+          ansible-galaxy collection list
+
       - name: Run Ansible inventory commands
         shell: pwsh
         run: |
-          ansible-inventory -i myinventory.aws_EC2.yml --list
+          ansible-inventory -i myinventory.aws_EC2.yml --list --yaml
           ansible-inventory -i myinventory.aws_EC2.yml --graph
 
       - name: Write SSH key to file
@@ -94,7 +75,7 @@ jobs:
           Set-Content -Path mykeyfile -Value '${{ secrets.ANSIBLE_SSH_KEY }}'
           chmod 400 mykeyfile
 
-      - name: Run Ansible playbook
+      - name: Run Ansible playbook with verbose output
         shell: pwsh
         run: |
-          ansible-playbook -i myinventory.aws_EC2.yml --private-key mykeyfile playbook.yml
+          ansible-playbook -i myinventory.aws_EC2.yml --private-key mykeyfile playbook.yml -vvv

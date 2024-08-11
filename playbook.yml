@@ -1,5 +1,14 @@
+# - name: Setup EC2 Instance
+#   hosts: AnsibleKey
+#   tasks:
+#     - name: Install Python3-pip
+#       apt:
+#         name: python3-pip
+#         state: present
+#         update_cache: yes
+
 - name: Setup EC2 Instance
-  hosts: AnsibleKey
+  hosts: tag_Name_AnsibleKey
   tasks:
     - name: Install Python3-pip
       apt:
