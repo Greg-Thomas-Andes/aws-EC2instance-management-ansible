@@ -16,29 +16,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4.1.7
 
-      - name: Cache Ansible and dependencies
-        uses: actions/cache@v4.0.2
-        id: cache-step
-        with:
-          path: |
-            ~/.local/pipx/venvs/ansible
-            /usr/local/lib/python3.8/dist-packages
-            ~/.ansible/
-            ~/.cache/
-          key: ${{ runner.os }}-ansible-${{ hashFiles('**/requirements.yml', '**/galaxy.yml') }}-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-ansible-
-
-      - name: Install Ansible (if not cached)
-        if: steps.cache-step.outputs.cache-hit != 'true'
+      - name: Install Ansible
         shell: pwsh
         run: |
           pipx install --include-deps ansible
 
-      - name: Install Ansible Galaxy Collection (if not cached)
+      - name: Install Ansible Galaxy Collection
         shell: pwsh
         run: |
           ansible-galaxy collection install amazon.aws
+          ansible-galaxy collection list
+
+      - name: Verify amazon.aws collection
+        shell: pwsh
+        run: |
+          python -c "from ansible_collections.amazon.aws.plugins.inventory.aws_ec2 import InventoryModule; print('aws_ec2 plugin is available')"
 
       - name: AWS Authentication
         uses: aws-actions/configure-aws-credentials@v4
@@ -56,12 +48,6 @@ jobs:
         shell: pwsh
         run: |
           aws ec2 describe-instances --query 'Reservations[*].Instances[*].[InstanceId,State.Name,Tags[?Key==`Name`].Value|[0]]' --output table
-
-      - name: Debug - Check Ansible version and plugins
-        shell: pwsh
-        run: |
-          ansible --version
-          ansible-galaxy collection list
 
       - name: Run Ansible inventory commands
         shell: pwsh

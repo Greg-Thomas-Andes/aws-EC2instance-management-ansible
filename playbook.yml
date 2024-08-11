@@ -8,7 +8,7 @@
 #         update_cache: yes
 
 - name: Setup EC2 Instance
-  hosts: tag_Name_AnsibleKey
+  hosts: all
   tasks:
     - name: Install Python3-pip
       apt:

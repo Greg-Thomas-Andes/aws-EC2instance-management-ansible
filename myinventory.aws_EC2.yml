@@ -2,7 +2,9 @@ plugin: amazon.aws.aws_ec2
 regions:
   - ap-southeast-1
 keyed_groups:
-  - key: tags.Name
-    prefix: tag_Name_
+  - prefix: tag
+    key: tags
   - key: instance_type
-    prefix: type_
+    prefix: instance_type
+compose:
+  ansible_host: public_ip_address
