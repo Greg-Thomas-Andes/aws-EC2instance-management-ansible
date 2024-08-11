@@ -4,6 +4,9 @@ on:
   push:
   workflow_dispatch:
 
+env:
+  ANSIBLE_HOSTKEY_CHECKING: false
+
 jobs:
   ansible-deploy:
     runs-on: ubuntu-latest
@@ -84,7 +87,12 @@ jobs:
           ansible-inventory -i myinventory.aws_EC2.yml --list
           ansible-inventory -i myinventory.aws_EC2.yml --graph
 
+      - name: Write SSH key to file
+        shell: pwsh
+        run: |
+          Set-Content -Path mykeyfile -Value '@{{ secrets.ANSIBLE_SSH_KEY }}'
+
       - name: Run Ansible playbook
         shell: pwsh
         run: |
-          ansible-playbook -i myinventory.aws_EC2.yml playbook.yml
+          ansible-playbook -i myinventory.aws_EC2.yml --private-key mykeyfile playbook.yml
