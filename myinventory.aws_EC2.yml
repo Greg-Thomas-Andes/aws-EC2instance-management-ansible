@@ -5,8 +5,8 @@ regions:
 
 keyed_groups:
   - key: key_name
+    separator: ''
     # prefix: Ansible
-    # separator: ""
 
 # groups:
 #   # add hosts to the group dev if any of the dictionary's keys or values is the word 'dev'.
