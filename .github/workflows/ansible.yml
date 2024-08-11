@@ -12,6 +12,16 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4.1.7
 
+    - name: Install Ansible(latest)
+      shell: pwsh
+      run: |
+        pipx install --include-deps ansible
+
+    - name: Install Ansible Galaxy Colleciton(amazon.aws)
+      shell: pwsh
+      run: |
+        ansible-galaxy collection install amazon.aws
+
     - name: AWS Authentication
       uses: aws-actions/configure-aws-credentials@v4
       with:
